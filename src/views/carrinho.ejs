@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrinho de compras</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/carrinho.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"/>
+    <style>
+        .msg-carrinho-vazio {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1.1em;
+            padding: 40px 0 30px 0;
+        }
+        .msg-produto-indisponivel { /* Changed class name */
+            color: #e74c3c; /* More prominent error color */
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        @media (max-width: 700px) {
+            .carrinho-table-responsive {
+                overflow-x: auto;
+            }
+            table {
+                min-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    <h1 style="text-align: center; margin-top: 18px;">Seu carrinho</h1>
+    <div class="carrinho-container">
+        <% if (!carrinho || !carrinho.items || carrinho.items.length === 0) { %>
+            <div class="msg-carrinho-vazio">
+                Seu carrinho está vazio.<br>
+                <a href="/lojas" class="checkout-btn" style="margin-top:18px;max-width:220px;">Ver produtos</a>
+            </div>
+        <% } else { %>
+        <div class="carrinho-table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>PRODUTO</th>
+                    <th>PREÇO UNITÁRIO</th>
+                    <th>QUANTIDADE</th>
+                    <th>SUBTOTAL ITEM</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <% carrinho.items.forEach(item => { %>
+                <% if (item.product) { %> <% /* Only render if product exists */ %>
+                <tr data-item-id="<%= item.id %>" data-product-id="<%= item.product.id %>">
+                    <td>
+                        <div class="produto-info">
+                            <div class="imagem-produto">
+                                <% if (item.product.images && item.product.images.length > 0 && item.product.images[0].id) { %>
+                                    <img src="/image/<%= item.product.images[0].id %>" alt="<%= item.product.name %>">
+                                <% } else { %>
+                                    <img src="/uploads/produtos/placeholder-img.png" alt="Placeholder">
+                                <% } %>
+                            </div>
+                            <div class="produto-nome">
+                                <a href="/lojas/<%= item.product.empresaId %>/produto/<%= item.product.id %>"><%= item.product.name %></a>
+                                <% if (item.product.boolPromo && item.product.desconto) { 
+                                    let precoOriginal = item.product.preco;
+                                    let precoComDesconto = precoOriginal * (1 - item.product.desconto / 100);
+                                %>
+                                    <br><small style="color: #e74c3c; text-decoration: line-through;">R$ <%= precoOriginal.toFixed(2) %></small>
+                                    <small style="color: #2ecc71;">R$ <%= precoComDesconto.toFixed(2) %></small>
+                                <% } %>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <% 
+                            let precoUnitario = item.product.preco;
+                            if (item.product.boolPromo && item.product.desconto) {
+                                precoUnitario = precoUnitario * (1 - item.product.desconto / 100);
+                            }
+                        %>
+                        R$ <%= precoUnitario.toFixed(2) %>
+                    </td>
+                    <td>
+                        <div class="quantidade-container">
+                            <button type="button" class="quantity-btn" onclick="updateQuantity('<%= item.id %>', -1, <%= item.product.id %>)">-</button>
+                            <span id="quantity-<%= item.id %>"><%= item.quantidade %></span>
+                            <button type="button" class="quantity-btn" onclick="updateQuantity('<%= item.id %>', 1, <%= item.product.id %>)">+</button>
+                        </div>
+                    </td>
+                    <td id="total-item-<%= item.id %>">
+                        R$ <%= (item.quantidade * precoUnitario).toFixed(2) %>
+                    </td>
+                    <td>
+                        <button type="button" class="excluir-btn" onclick="removeItem('<%= item.id %>')"> <!-- Changed id to class -->
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </td>
+                </tr>
+                <% } else { %>
+                <% /* Optional: Could show a row indicating an item was removed if desired, but filtering in controller is cleaner */ %>
+                <% } %>
+                <% }) %>
+            </tbody>
+        </table>
+        </div>
+        <div class="checkout">
+            <h3>Resumo da compra</h3>
+            <table>
+                <tr id="subtotal-row">
+                    <td>Subtotal dos produtos</td>
+                    <td data-subtotal>R$ <%= carrinho.subtotal ? carrinho.subtotal.toFixed(2) : '0.00' %></td>
+                </tr>
+                <tr id="frete-row">
+                    <td>Frete <% if (frete && frete.estado) { %>(<%= frete.estado %>)<% } %></td>
+                    <td data-frete-preco> <%= frete && frete.precoFormated ? frete.precoFormated : 'A calcular' %> </td>
+                </tr>
+                <% if (carrinho.desconto > 0) { %>
+                <tr id="desconto-row">
+                    <td>Desconto</td>
+                    <td>- R$ <%= carrinho.desconto.toFixed(2) %></td>
+                </tr>
+                <% } %>
+                <tr class="total-row">
+                    <td>Total</td>
+                    <td class="total" data-total-geral>R$ <%= carrinho.total ? carrinho.total.toFixed(2) : '0.00' %></td>
+                </tr>
+            </table>
+            <button class="checkout-btn" type="button" onclick="window.location.href='/checkout'">PROSSEGUIR PARA PAGAMENTO</button>
+        </div>
+        <% } %>
+    </div>
+    <%- include('partials/footer') %>
+    <script src="/js/carrinho.js"></script>
+</body>
+</html>

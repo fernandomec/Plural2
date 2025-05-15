@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle + ' - ' : '' %>Painel Administrativo - Plural</title>
+    <link rel="shortcut icon" href="/imgs/logo plural shortcut.png">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/header.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/admin-modelo.css">
+    <% if (typeof pageContent !== 'undefined' && ['create-product', 'edit-product', 'create-empresa', 'edit-empresa', 'create-category', 'edit-category'].includes(pageContent)) { %>
+    <link rel="stylesheet" href="/css/admin-forms.css">
+    <% } %>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"/>
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Admin Painel</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="<%= typeof pageContent === 'undefined' || pageContent === 'dashboard' ? 'active' : '' %>">
+                        <a href="/admin"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="<%= typeof pageContent !== 'undefined' && pageContent === 'usuarios' ? 'active' : '' %>">
+                        <a href="/admin/usuarios"><i class="fas fa-users"></i> Usuários</a>
+                    </li>
+                    <li class="<%= typeof pageContent !== 'undefined' && pageContent === 'empresas' ? 'active' : '' %>">
+                        <a href="/admin/empresas"><i class="fas fa-building"></i> Empresas</a>
+                    </li>
+                    <li class="<%= typeof pageContent !== 'undefined' && pageContent === 'categorias' ? 'active' : '' %>">
+                        <a href="/admin/categorias"><i class="fas fa-tags"></i> Categorias</a>
+                    </li>
+                    <li class="<%= typeof pageContent !== 'undefined' && (pageContent === 'product' || pageContent === 'create-product' || pageContent === 'edit-product') ? 'active' : '' %>">
+                        <a href="/admin/produtos"><i class="fas fa-box-open"></i> Produtos</a>
+                    </li>
+                    <li class="<%= typeof pageContent !== 'undefined' && pageContent === 'pedidos' ? 'active' : '' %>">
+                        <a href="/admin/pedidos"><i class="fas fa-shopping-cart"></i> Pedidos</a>
+                    </li>
+                    <li class="<%= typeof pageContent !== 'undefined' && pageContent === 'frete-empresa' ? 'active' : '' %>">
+                        <a href="/admin/frete-empresa"><i class="fas fa-truck"></i> Frete Empresas</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="/" title="Voltar para o site principal">Voltar para o Site</a>
+            </div>
+        </aside>
+
+        <% if (typeof pageContent === 'undefined' || pageContent === 'dashboard') { %>
+            <%- include('partials-admin/dashboard') %>
+        <% } else if (pageContent === 'product') { %>
+            <%- include('partials-admin/product/product', { 
+                produtos: typeof produtos !== 'undefined' ? produtos : [],
+                totalProdutos: typeof totalProdutos !== 'undefined' ? totalProdutos : 0,
+                empresas: typeof empresas !== 'undefined' ? empresas : [],
+                categorias: typeof categorias !== 'undefined' ? categorias : [],
+                filtros: typeof filtros !== 'undefined' ? filtros : { empresa: '', categoria: '', promo: '' }
+            }) %>
+        <% } else if (pageContent === 'create-product') { %>
+            <%- include('partials-admin/product/create-product') %>
+        <% } else if (pageContent === 'edit-product') { %>
+            <%- include('partials-admin/product/edit-product') %>
+        <% } else if (pageContent === 'empresas') { %>
+            <%- include('partials-admin/empresas/empresas') %>
+        <% } else if (pageContent === 'create-empresa') { %>
+            <%- include('partials-admin/empresas/create-empresa') %>
+        <% } else if (pageContent === 'edit-empresa') { %>
+            <%- include('partials-admin/empresas/edit-empresa') %>
+        <% } else if (pageContent === 'usuarios') { %>
+            <%- include('partials-admin/usuarios') %>
+        <% } else if (pageContent === 'edit-user') { %>
+            <%- include('partials-admin/user/edit-user') %>
+        <% } else if (pageContent === 'categorias') { %>
+            <%- include('partials-admin/category/category') %>
+        <% } else if (pageContent === 'create-category') { %>
+            <%- include('partials-admin/category/create-category') %>
+        <% } else if (pageContent === 'edit-category') { %>
+            <%- include('partials-admin/category/edit-category') %>
+        <% } else if (pageContent === 'pedidos') { %>
+            <%- include('partials-admin/pedidos') %>
+        <% } else if (pageContent === 'edit-pedido') { %>
+            <%- include('partials-admin/pedidos/edit-pedido') %>
+        <% } else if (pageContent === 'frete-empresa') { %>
+            <%- include('partials-admin/frete-empresa/create-frete', { empresas: typeof empresas !== 'undefined' ? empresas : [] }) %>
+        <% } %>
+    </div>
+
+    <%- include('partials/footer') %>
+    <% if (typeof pageContent === 'undefined' || pageContent === 'dashboard') { %>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <% } %>
+    <script src="/js/admin.js"></script>
+</body>
+</html>

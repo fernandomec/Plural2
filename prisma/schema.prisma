@@ -1,0 +1,201 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client" // Added this line
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  EDITOR
+  ADMIN
+}
+
+enum OrderStatus {
+  PEDIDO_RECEBIDO
+  PAGAMENTO_APROVADO
+  EM_SEPARACAO
+  ENVIADO_TRANSPORTADORA
+  EM_TRANSPORTE
+  EM_ROTA_DE_ENTREGA
+  ENTREGUE
+  TROCA_DEVOLUCAO_SOLICITADA
+  TROCA_DEVOLUCAO_CONCLUIDA
+  CANCELADO 
+}
+
+model Imagem {
+  id        Int      @id @default(autoincrement())
+  data      Bytes
+  mimeType  String
+  createdAt DateTime @default(now())
+
+  userProfile   User?    @relation("UserProfileImage")
+  empresaBanner Empresa? @relation("EmpresaBanner")
+  empresaLogo   Empresa? @relation("EmpresaLogo")
+  productImages Product? @relation("ProductImage", fields: [productId], references: [id])
+  productId     Int?
+}
+
+model User {
+  id                  Int            @id @default(autoincrement())
+  email               String         @unique
+  username            String         @db.VarChar(30)
+  password            String         @db.Text
+  tel                 String?        @db.VarChar(20)
+  cep                 String?        @db.VarChar(9)
+  bairro              String?        @db.Text
+  endereco            String?        @db.Text
+  enderecoComplemento String?        @db.Text
+  pastPassword        PastPassword[]
+  role                Role           @default(USER)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt // Added
+  carrinho            Carrinho? // Changed to one-to-one
+  products            Product[] // Products created by this user (if admin/editor)
+  pedidos             Pedido[]
+
+  profileImageId Int?     @unique
+  profileImage   Imagem?  @relation("UserProfileImage", fields: [profileImageId], references: [id], onDelete: SetNull)
+}
+
+model Empresa {
+  id            Int        @id @default(autoincrement())
+  razaoSocial   String
+  nomeFantasia  String?
+  email         String     @unique
+  password      String     @db.VarChar(255)
+  cnpj          String     @unique
+  telefone      String
+  sobre         String     @db.Text
+  slogan        String?
+
+  bannerId      Int?       @unique
+  bannerImagem  Imagem?    @relation("EmpresaBanner", fields: [bannerId], references: [id], onDelete: SetNull)
+
+  logoId        Int?       @unique
+  logoImagem    Imagem?    @relation("EmpresaLogo", fields: [logoId], references: [id], onDelete: SetNull)
+
+  products      Product[]
+  categorias    Category[]
+  pedidos       Pedido[]
+  pastPasswords PastPassword[] // Passwords for this company account
+  fretesPorEstado FretePorEstado[] // Relation to shipping costs per state
+
+  createdAt DateTime @default(now()) // Added
+  updatedAt DateTime @updatedAt // Added
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String
+  empresa   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId Int
+  products  Product[]
+
+  createdAt DateTime @default(now()) // Added
+  updatedAt DateTime @updatedAt // Added
+
+  @@unique([name, empresaId])
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  descricao   String   @db.Text
+  preco       Float
+  boolPromo   Boolean  @default(false)
+  desconto    Int?
+  estoque     Int
+  codBarra    String?  // Remove @unique constraint
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  empresa     Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  empresaId   Int
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict) // Restrict deletion of category if products exist
+  categoryId  Int
+  images      Imagem[] @relation("ProductImage") // Product can have multiple images
+  user        User     @relation(fields: [userId], references: [id]) // User who created/manages product
+  userId      Int
+  orderItems  OrderItem[]
+  carrinhoItems CarrinhoItem[] // Added relation to CarrinhoItem
+}
+
+model Carrinho {
+  id        Int            @id @default(autoincrement())
+  userId    Int            @unique // Each user has one cart
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CarrinhoItem[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model CarrinhoItem {
+  id          Int      @id @default(autoincrement())
+  carrinhoId  Int
+  carrinho    Carrinho @relation(fields: [carrinhoId], references: [id], onDelete: Cascade)
+  productId   Int
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade) // If product is deleted, remove from cart
+  quantidade  Int
+  addedAt     DateTime @default(now())
+
+  @@unique([carrinhoId, productId])
+}
+
+model Pedido {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id])
+  empresaId     Int
+  empresa       Empresa     @relation(fields: [empresaId], references: [id])
+  totalAmount   Float
+  status        OrderStatus @default(PEDIDO_RECEBIDO)
+  paymentMethod String
+  shippingAddressFull String? // Full address string for the order
+  shippingCost        Float?  // Cost of shipping for this order
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  orderItems    OrderItem[]
+}
+
+model OrderItem {
+  id            Int     @id @default(autoincrement())
+  pedidoId      Int
+  pedido        Pedido  @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  productId     Int
+  product       Product @relation(fields: [productId], references: [id], onDelete: Restrict) // Prevent product deletion if in an order
+  productName   String // Store name at time of order
+  productPrice  Float  // Store price at time of order
+  quantity      Int
+}
+
+model PastPassword {
+  id        Int      @id @default(autoincrement())
+  password  String
+  createdAt DateTime @default(now())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  empresaId Int?
+  empresa   Empresa? @relation(fields: [empresaId], references: [id])
+}
+
+model FretePorEstado {
+  id        Int      @id @default(autoincrement())
+  empresaId Int
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  estado    String   @db.VarChar(2) // UF, e.g., "SP", "RJ"
+  preco     Float    // Shipping cost for this state
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([empresaId, estado]) // Each company can only have one price per state
+}

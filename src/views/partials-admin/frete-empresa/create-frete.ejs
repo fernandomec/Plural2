@@ -1,0 +1,163 @@
+<section class="content-form-section">
+    <div class="form-header">
+        <h1>Cadastrar Frete por Estado</h1>
+    </div>
+    <div id="formMessages"></div>
+    <form id="freteForm" class="frete-form">
+        <div class="form-group">
+            <label for="empresaId">Empresa <span class="required">*</span></label>
+            <div class="custom-select-wrapper">
+                <select id="empresaId" name="empresaId" required>
+                    <option value="">Selecione uma empresa</option>
+                    <% empresas.forEach(empresa => { %>
+                        <option value="<%= empresa.id %>"><%= empresa.razaoSocial %></option>
+                    <% }); %>
+                </select>
+                <i class="fas fa-chevron-down select-arrow"></i>
+            </div>
+        </div>
+        <div id="estadosSection" style="display: none;">
+            <h3>Preços de Frete por Estado</h3>
+            <div class="estados-grid">
+                <% 
+                    const estadosBrasileiros = {
+                        "AC": "Acre", "AL": "Alagoas", "AP": "Amapá", "AM": "Amazonas", "BA": "Bahia", "CE": "Ceará", 
+                        "DF": "Distrito Federal", "ES": "Espírito Santo", "GO": "Goiás", "MA": "Maranhão", 
+                        "MT": "Mato Grosso", "MS": "Mato Grosso do Sul", "MG": "Minas Gerais", "PA": "Pará", 
+                        "PB": "Paraíba", "PR": "Paraná", "PE": "Pernambuco", "PI": "Piauí", "RJ": "Rio de Janeiro", 
+                        "RN": "Rio Grande do Norte", "RS": "Rio Grande do Sul", "RO": "Rondônia", "RR": "Roraima", 
+                        "SC": "Santa Catarina", "SP": "São Paulo", "SE": "Sergipe", "TO": "Tocantins"
+                    };
+                    Object.entries(estadosBrasileiros).forEach(([uf, nome]) => { 
+                %>
+                    <div class="estado-row">
+                        <label for="frete_<%= uf %>"><%= nome %> (<%= uf %>)</label>
+                        <input 
+                            type="number" 
+                            id="frete_<%= uf %>" 
+                            name="fretes[<%= uf %>]" 
+                            step="0.01" 
+                            min="0" 
+                            value="0.00" 
+                            required 
+                            class="input-styled frete-input"
+                            placeholder="0.00"
+                        >
+                    </div>
+                <% }); %>
+            </div>
+            <div class="form-actions">
+                <a href="/admin/empresas" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+                <button type="submit" class="btn btn-primary btn-save"><i class="fas fa-save"></i> Salvar</button>
+            </div>
+        </div>
+    </form>
+</section>
+<style>
+    .estados-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+    .estado-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 10px 15px;
+        border: 1px solid #e0e0e0;
+    }
+    .estado-row label {
+        flex: 1;
+        font-weight: 500;
+        color: #333;
+    }
+    .frete-input {
+        width: 100px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        border: 1px solid #d1d5db;
+        font-size: 1em;
+        text-align: right;
+    }
+    .frete-input:focus {
+        border-color: #366cc9;
+        outline: none;
+    }
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const empresaSelect = document.getElementById('empresaId');
+        const estadosSection = document.getElementById('estadosSection');
+        const freteForm = document.getElementById('freteForm');
+        const formMessages = document.getElementById('formMessages');
+
+        empresaSelect.addEventListener('change', function() {
+            if (this.value) {
+                estadosSection.style.display = 'block';
+            } else {
+                estadosSection.style.display = 'none';
+            }
+        });
+
+        freteForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!empresaSelect.value) {
+                showMessage('Selecione uma empresa.', 'error');
+                return;
+            }
+            // Validação dos campos de frete
+            let valid = true;
+            document.querySelectorAll('.frete-input').forEach(input => {
+                if (input.value === '' || isNaN(input.value) || Number(input.value) < 0) {
+                    input.classList.add('error-field');
+                    valid = false;
+                } else {
+                    input.classList.remove('error-field');
+                }
+            });
+            if (!valid) {
+                showMessage('Preencha todos os valores de frete corretamente.', 'error');
+                return;
+            }
+
+            // Montar dados para envio
+            const formData = new FormData(freteForm);
+            const empresaId = empresaSelect.value;
+            const fretes = {};
+            for (let [key, value] of formData.entries()) {
+                if (key.startsWith('fretes[')) {
+                    const uf = key.match(/fretes\[(.*)\]/)[1];
+                    fretes[uf] = parseFloat(value).toFixed(2);
+                }
+            }
+            try {
+                const response = await fetch('/admin/frete-empresa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ empresaId, fretes })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showMessage('Fretes cadastrados com sucesso!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/admin/empresas';
+                    }, 2000);
+                } else {
+                    showMessage(result.message || 'Erro ao cadastrar fretes.', 'error');
+                }
+            } catch (err) {
+                showMessage('Erro ao enviar formulário. Verifique o console.', 'error');
+                console.error(err);
+            }
+        });
+
+        function showMessage(message, type) {
+            formMessages.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            formMessages.scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => { formMessages.innerHTML = ''; }, 5000);
+        }
+    });
+</script>
