@@ -118,7 +118,7 @@ module.exports = {
                 shipping_complemento,
                 shipping_bairro,
                 shipping_cep,
-                shipping_cidade, // Assuming you add cidade and estado to form
+                shipping_cidade,
                 shipping_estado
             } = req.body;
 
@@ -129,7 +129,7 @@ module.exports = {
                         include: {
                             product: {
                                 include: {
-                                    empresa: true, // For shipping rates
+                                    empresa: true,
                                 }
                             }
                         }
@@ -140,8 +140,9 @@ module.exports = {
             if (!userCart || !userCart.items || userCart.items.length === 0) {
                 return res.status(400).send('Carrinho vazio.');
             }
+            
             const carrinhoItems = userCart.items.filter(item => item.product);
-             if (carrinhoItems.length === 0) {
+            if (carrinhoItems.length === 0) {
                 return res.status(400).send('Nenhum produto válido no carrinho.');
             }
             
@@ -152,7 +153,6 @@ module.exports = {
             }
             
             const empresaForShipping = await prisma.empresa.findUnique({ where: {id: empresaIdForOrder }});
-
 
             let itemsSubtotal = 0;
             const orderItemsData = carrinhoItems.map(item => {
@@ -166,78 +166,73 @@ module.exports = {
                     productName: item.product.name,
                     productPrice: precoFinal,
                     quantity: item.quantidade,
-                    // empresaId and empresaName are not standard in OrderItem, but can be added if needed
-                    // For now, Pedido has empresaId
                 };
             });
 
-            // Recalculate shipping cost based on confirmed/submitted address (shipping_estado)
-            let confirmedShippingCost = 0; // Default to 0
-            const confirmedState = shipping_estado ? shipping_estado.toUpperCase() : null; // State from the form
+            // Calculate shipping cost
+            let confirmedShippingCost = 0;
+            const confirmedState = shipping_estado ? shipping_estado.toUpperCase() : null;
 
             if (empresaForShipping && confirmedState) {
-                const freteRule = empresaForShipping.fretesPorEstado.find(f => f.estado === confirmedState);
+                const fretesPorEstado = Array.isArray(empresaForShipping.fretesPorEstado) ? 
+                    empresaForShipping.fretesPorEstado : [];
+                
+                const freteRule = fretesPorEstado.find(f => f.estado === confirmedState);
                 if (freteRule) {
                     confirmedShippingCost = freteRule.preco;
                 } else {
-                    const fretePadraoRule = empresaForShipping.fretesPorEstado.find(f => f.estado === "ZZ"); 
+                    const fretePadraoRule = fretesPorEstado.find(f => f.estado === "ZZ");
                     if (fretePadraoRule) {
                         confirmedShippingCost = fretePadraoRule.preco;
                     }
-                    // If no specific state rule and no ZZ rule, confirmedShippingCost remains 0
                 }
-            } else if (empresaForShipping && !confirmedState) { // No state provided in form, check for ZZ
-                 const fretePadraoRule = empresaForShipping.fretesPorEstado.find(f => f.estado === "ZZ");
-                 if (fretePadraoRule) {
+            } else if (empresaForShipping) {
+                const fretesPorEstado = Array.isArray(empresaForShipping.fretesPorEstado) ? 
+                    empresaForShipping.fretesPorEstado : [];
+                
+                const fretePadraoRule = fretesPorEstado.find(f => f.estado === "ZZ");
+                if (fretePadraoRule) {
                     confirmedShippingCost = fretePadraoRule.preco;
-                 }
-                 // If no state in form and no ZZ rule, confirmedShippingCost remains 0
+                }
             }
-            // If !empresaForShipping, confirmedShippingCost remains 0
-
 
             const totalAmount = itemsSubtotal + confirmedShippingCost;
             
+            // Prepare address string
             const fullAddress = `${shipping_endereco}, ${shipping_complemento || ''} - ${shipping_bairro}, ${shipping_cidade} / ${shipping_estado} - CEP: ${shipping_cep}`;
 
+            // Create order
             const pedido = await prisma.pedido.create({
                 data: {
                     userId,
                     empresaId: empresaIdForOrder,
-                    totalAmount, // Total including shipping
+                    totalAmount,
                     paymentMethod: paymentMethod || "Não Especificado",
                     status: OrderStatus.PEDIDO_RECEBIDO,
                     shippingAddressFull: fullAddress,
                     shippingCost: confirmedShippingCost,
                     orderItems: {
                         create: orderItemsData
-                    },
+                    }
                 }
             });
 
-            // Clear the cart
-            await prisma.carrinhoItem.deleteMany({ // Delete items first due to relation
+            // Clear cart
+            await prisma.carrinhoItem.deleteMany({
                 where: { carrinhoId: userCart.id }
             });
-            // It's safer to delete items then the cart, or handle relations appropriately.
-            // If CarrinhoItem.carrinhoId is part of @@unique([carrinhoId, productId])
-            // and onDelete: Cascade is on Carrinho.items, deleting the Carrinho might be enough.
-            // Let's be explicit:
+            
             await prisma.carrinho.update({
                 where: { id: userCart.id },
-                data: { items: { deleteMany: {} } } // Clears items from the cart
+                data: { items: { deleteMany: {} } }
             });
-            // Or, if you want to delete the cart record itself (if it's recreated per session/user)
-            // await prisma.carrinho.delete({ where: { userId } });
 
-
-            // Redirect to order status page or a success page
-            req.flash('success', `Pedido #${pedido.id} realizado com sucesso!`);
-            res.redirect('/status-pedido');
+            // Redirect to order status page
+            return res.redirect('/status-pedido?success=true&pedidoId=' + pedido.id);
 
         } catch (error) {
             console.error('Error confirming checkout:', error);
-            res.status(500).render('404', { message: 'Erro ao confirmar o pedido.' });
+            return res.status(500).render('404', { message: 'Erro ao confirmar o pedido.' });
         }
     },
 
