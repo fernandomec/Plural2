@@ -62,8 +62,8 @@
                     <% produtosRelacionados.forEach(relacionado => { %>
                         <a href="/lojas/<%= relacionado.empresaId %>/produto/<%= relacionado.id %>" class="card-produto">
                             <div class="container-imagem-produto">
-                                <% if (relacionado.images && relacionado.images[0]) { %>
-                                    <img src="<%= relacionado.images[0].endereco %>" alt="<%= relacionado.name %>">
+                                <% if (relacionado.images && relacionado.images[0] && relacionado.images[0].id) { %>
+                                    <img src="/image/<%= relacionado.images[0].id %>" alt="<%= relacionado.name %>">
                                 <% } else { %>
                                     <img src="/uploads/produtos/placeholder-img.png" alt="Placeholder">
                                 <% } %>
