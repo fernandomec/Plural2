@@ -41,3 +41,12 @@ body {
     -ms-user-select: none;
     user-select: none;
 }
+
+a {
+    color: #1f2f77;
+    text-decoration: underline;
+    transition: color 0.2s;
+}
+a:hover {
+    color: #0b1863;
+}

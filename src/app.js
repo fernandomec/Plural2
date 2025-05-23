@@ -86,6 +86,8 @@ app.get('/image/:id', async (req, res) => {
   }
 });
 
+
+
 //servidor
 const PORT = process.env.PORT || 3000;
 
@@ -109,6 +111,7 @@ const adminRoutes = require('./routes/admin');
 const lojaRoutes = require('./routes/loja');
 const userRoutes = require('./routes/user');
 const orderRoutes = require('./routes/order');
+const authRoutes = require('./routes/auth');
 
 
 
@@ -117,6 +120,7 @@ app.use('/admin', adminRoutes);
 app.use('/', lojaRoutes);
 app.use('/', userRoutes);
 app.use('/', orderRoutes);
+app.use('/', authRoutes);
 
 //home
 app.get('/', async (req, res) => {
@@ -143,7 +147,13 @@ app.get('/contact', (req, res) => {
   res.render('contact', { user: res.locals.user });
 });
 
+//termos de uso
+app.get('/politica-de-privacidade', (req, res) => {
+    res.render('politica-de-privacidade', { user: req.user });
+});
+
 //404
 app.use((req, res, next) => {
   res.status(404).render('404');
 });
+

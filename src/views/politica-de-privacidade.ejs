@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Política de Privacidade | Plural2</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .politica-container {
+            max-width: 900px;
+            margin: 40px auto 60px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+            padding: 40px 30px;
+            font-size: 1.08em;
+            color: #222;
+        }
+        .politica-container h1 {
+            color: #1f2f77;
+            font-size: 2.2em;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+        .politica-container h2 {
+            color: #0b1863;
+            font-size: 1.3em;
+            margin-top: 32px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 4px;
+        }
+        .politica-container ul {
+            margin-left: 22px;
+            margin-bottom: 18px;
+        }
+        .politica-container li {
+            margin-bottom: 7px;
+        }
+        .politica-container strong {
+            color: #1f2f77;
+        }
+        .politica-container .contato {
+            background: #f4f6fa;
+            border-radius: 8px;
+            padding: 18px;
+            margin-top: 30px;
+            font-size: 1em;
+        }
+        @media (max-width: 600px) {
+            .politica-container {
+                padding: 18px 7px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('partials/header') %>
+    <main class="main-content">
+        <div class="politica-container">
+            <h1>Política de Privacidade</h1>
+            <p>
+                Esta Política de Privacidade descreve como a <strong>Plural2</strong> coleta, utiliza, armazena e protege as informações pessoais dos usuários, em conformidade com a Lei Geral de Proteção de Dados (LGPD) e demais legislações aplicáveis. A transparência e a clareza são essenciais para garantir a confiança dos usuários e o cumprimento das obrigações legais.
+            </p>
+
+            <h2>1. Quem é o responsável pelo tratamento de dados?</h2>
+            <p>
+                O controlador dos dados é a <strong>Plural2</strong>, responsável por decidir como e por que os dados pessoais são tratados.
+            </p>
+
+            <h2>2. Quais dados são coletados?</h2>
+            <ul>
+                <li>Nome e informações de contato (e-mail, telefone);</li>
+                <li>Endereço e dados de entrega;</li>
+                <li>Dados de navegação e uso do site;</li>
+                <li>Informações de pagamento (quando aplicável);</li>
+                <li>Outros dados fornecidos voluntariamente pelo usuário.</li>
+            </ul>
+
+            <h2>3. Finalidades do uso dos dados</h2>
+            <ul>
+                <li>Personalização de serviços e experiência do usuário;</li>
+                <li>Processamento de pedidos e entregas;</li>
+                <li>Envio de comunicações, newsletters e marketing (com consentimento);</li>
+                <li>Atendimento ao cliente e suporte;</li>
+                <li>Cumprimento de obrigações legais e regulatórias.</li>
+            </ul>
+
+            <h2>4. Bases legais para o tratamento</h2>
+            <p>
+                O tratamento dos dados pessoais é realizado com base em:
+            </p>
+            <ul>
+                <li>Consentimento do titular;</li>
+                <li>Execução de contrato ou procedimentos preliminares;</li>
+                <li>Cumprimento de obrigações legais/regulatórias;</li>
+                <li>Legítimo interesse do controlador, respeitando os direitos do titular.</li>
+            </ul>
+
+            <h2>5. Direitos dos titulares de dados</h2>
+            <p>
+                Os usuários têm direito a:
+            </p>
+            <ul>
+                <li>Acessar, corrigir ou atualizar seus dados pessoais;</li>
+                <li>Solicitar a exclusão dos dados;</li>
+                <li>Solicitar a portabilidade dos dados;</li>
+                <li>Opor-se ao tratamento ou solicitar restrição;</li>
+                <li>Revogar o consentimento a qualquer momento.</li>
+            </ul>
+
+            <h2>6. Medidas de segurança</h2>
+            <p>
+                Adotamos medidas técnicas e organizacionais para proteger os dados pessoais contra acesso não autorizado, uso indevido, alteração ou destruição, incluindo criptografia, controle de acesso e monitoramento.
+            </p>
+
+            <h2>7. Compartilhamento de dados</h2>
+            <p>
+                Os dados podem ser compartilhados com terceiros apenas quando necessário para:
+            </p>
+            <ul>
+                <li>Processamento de pagamentos;</li>
+                <li>Entrega de produtos;</li>
+                <li>Cumprimento de obrigações legais;</li>
+                <li>Prestadores de serviços contratados, sempre com proteção adequada.</li>
+            </ul>
+
+            <h2>8. Transferência internacional de dados</h2>
+            <p>
+                Caso haja transferência de dados para outros países, garantimos que serão adotadas medidas de proteção compatíveis com a legislação vigente.
+            </p>
+
+            <h2>9. Como exercer seus direitos?</h2>
+            <p>
+                Para exercer seus direitos, entre em contato conosco utilizando nosso <a href="/contact">cartão de contato</a>.
+            </p>
+
+            <h2>10. Atualizações desta Política</h2>
+            <p>
+                Esta Política de Privacidade pode ser atualizada periodicamente. Recomendamos que o usuário revise esta página regularmente para estar ciente de eventuais alterações.
+            </p>
+
+            <div class="contato">
+                <strong>Dúvidas?</strong> Entre em contato: <a href="mailto:privacidade@plural2.com.br">privacidade@plural2.com.br</a>
+            </div>
+        </div>
+    </main>
+    <% include('partials/footer') %>
+</body>
+</html>
