@@ -90,20 +90,9 @@ app.get('/image/:id', async (req, res) => {
 
 //servidor
 const PORT = process.env.PORT || 3000;
-
-async function main() {
-  try {
-    app.listen(PORT, () => {
-      console.info(`Servidor rodando em http://localhost:${PORT}`);
-    });
-  } catch (e) {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  }
-}
-  
-main();
+app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
 
 //rotas
 const authenticationRoutes = require('./routes/authentication');
